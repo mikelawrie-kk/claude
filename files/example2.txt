@@ -1,0 +1,4 @@
+This is example file 2.
+
+The zip download feature supports multiple files of different types.
+All files in the 'files' directory will be packaged together.

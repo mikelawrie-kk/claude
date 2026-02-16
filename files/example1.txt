@@ -1,0 +1,4 @@
+This is example file 1.
+
+This file demonstrates the zip download functionality.
+You can add any files you want to this directory and they will be included in the zip download.
