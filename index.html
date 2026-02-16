@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competitor Hotel Selection</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Select Competitor Hotels</h1>
+
+        <!-- Suggested Hotels Section -->
+        <div class="suggested-section">
+            <h2>Suggested Competitor Hotels</h2>
+            <p class="info-text">Review and approve/reject suggested hotels</p>
+            <div id="suggestedHotels" class="suggested-hotels-list">
+                <!-- Suggested hotels will be populated here -->
+            </div>
+        </div>
+
+        <!-- Manual Search Section -->
+        <div class="search-section">
+            <h2>Search for Hotels</h2>
+            <p class="info-text">Start typing to see suggestions</p>
+            <div class="search-container">
+                <input
+                    type="text"
+                    id="hotelSearch"
+                    placeholder="Type hotel name..."
+                    autocomplete="off"
+                >
+                <div id="autocompleteList" class="autocomplete-list"></div>
+            </div>
+        </div>
+
+        <!-- Selected Hotels Section -->
+        <div class="selected-section">
+            <h2>Selected Competitor Hotels</h2>
+            <p class="info-text">No hotels selected yet</p>
+            <div id="selectedHotels" class="selected-hotels-list">
+                <!-- Selected hotels will appear here -->
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions">
+            <button id="clearAll" class="btn btn-secondary">Clear All</button>
+            <button id="saveSelection" class="btn btn-primary">Save Selection</button>
+        </div>
+    </div>
+
+    <script src="hotelData.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
