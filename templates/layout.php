@@ -1,212 +1,287 @@
 <?php
 /**
  * Filename: layout.php
- * Description: Shared HTML layout template providing renderHeader and renderFooter functions
+ * Description: Shared HTML layout template for public and admin pages
  * Project: Safari Traveller - African Property Harvester
- * Version: 1.0.0
+ * Version: 1.1.0
  * Created: 2026-02-17 12:00 SAST
  * Modified: 2026-02-17 12:00 SAST
- * Changes: Added renderAdminHeader and renderAdminFooter functions
+ * Changes: Complete rewrite with updated CSS class names, SVG icons, improved navigation structure
  */
 
 /**
- * Render the HTML document header including doctype, head, navigation bar.
+ * Render the public page header (everything from <!DOCTYPE> through opening <main>).
  *
- * @param string $title       Page title
+ * @param string $title       Page title (appears in <title> tag)
  * @param string $description Meta description for SEO
- * @param string $extraHead   Additional markup to inject into <head>
- * @return void               Outputs HTML directly
+ * @param string $extraCss    Additional CSS (raw <link> or <style> tags)
  */
-function renderHeader(string $title = 'Safari Traveller', string $description = 'Discover Africa\'s safari lodges rated for AI visibility. Entity authority audits, structured data analysis, and AI readiness scores for every safari property in Africa.', string $extraHead = ''): void
+function renderHeader(string $title = '', string $description = '', string $extraCss = ''): void
 {
-    $titleEsc = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
-    $descEsc  = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
-    ?>
+    $siteTitle = 'Safari Traveller';
+    $fullTitle = $title
+        ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . ' | ' . $siteTitle
+        : $siteTitle . ' — Africa\'s AI-Ready Safari Discovery Platform';
+    $metaDesc = $description
+        ? htmlspecialchars($description, ENT_QUOTES, 'UTF-8')
+        : 'Discover Africa\'s finest safari lodges, private guides, and tour operators. AI-ready property listings with entity authority audits.';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $titleEsc ?></title>
-    <meta name="description" content="<?= $descEsc ?>">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title><?= $fullTitle ?></title>
+    <meta name="description" content="<?= $metaDesc ?>">
+
+    <!-- Favicon placeholder -->
+    <link rel="icon" type="image/png" href="/assets/img/favicon.png">
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+
+    <!-- Preconnect to Google Fonts for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Main stylesheet (includes Poppins @import) -->
     <link rel="stylesheet" href="/assets/css/style.css">
-    <?= $extraHead ?>
+
+    <?php if (!empty($extraCss)): ?>
+    <?= $extraCss ?>
+    <?php endif; ?>
 </head>
 <body>
-    <nav class="site-nav">
-        <div class="nav-container">
-            <a href="/public/" class="nav-logo">Safari <span>Traveller</span></a>
-            <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-                <span class="nav-toggle-bar"></span>
-                <span class="nav-toggle-bar"></span>
-                <span class="nav-toggle-bar"></span>
+
+    <!-- Public Navigation -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-logo">
+                Safari <span class="logo-accent">Traveller</span>
+            </a>
+
+            <div class="navbar-nav">
+                <a href="/public/search.php">Browse</a>
+                <a href="/public/country.php">Countries</a>
+                <a href="/public/about.php">About</a>
+                <button class="navbar-search-icon" aria-label="Search" onclick="document.querySelector('.hero-search-input')?.focus()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <button class="navbar-toggle" aria-label="Toggle navigation" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
             </button>
-            <ul class="nav-links">
-                <li><a href="/public/">Home</a></li>
-                <li><a href="/public/search.php">Browse</a></li>
-                <li><a href="/public/search.php?sort=score">Top Rated</a></li>
-                <li><a href="/public/claim.php" class="nav-cta">Claim Your Lodge</a></li>
-            </ul>
+        </div>
+
+        <div class="navbar-mobile">
+            <a href="/public/search.php">Browse Properties</a>
+            <a href="/public/country.php">Countries</a>
+            <a href="/public/about.php">About Safari Traveller</a>
+            <a href="/public/search.php">Search</a>
         </div>
     </nav>
-    <main class="site-main">
-    <?php
+
+    <main>
+<?php
 }
 
 /**
- * Render the HTML document footer with site links and closing tags.
+ * Render the public page footer (closing </main> through </html>).
  *
- * @param string $extraScripts Additional <script> tags to include before </body>
- * @return void                Outputs HTML directly
+ * @param string $extraJs Additional JavaScript (raw <script> tags or inline JS)
  */
-function renderFooter(string $extraScripts = ''): void
+function renderFooter(string $extraJs = ''): void
 {
-    ?>
+    $year = date('Y');
+?>
     </main>
-    <footer class="site-footer">
-        <div class="footer-container">
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
             <div class="footer-grid">
-                <div class="footer-col">
-                    <h4>Safari <span>Traveller</span></h4>
-                    <p>Africa's AI-ready safari discovery platform. We audit every safari lodge for entity authority and AI visibility so travellers find the best -- and lodges get found.</p>
+                <!-- About -->
+                <div>
+                    <h4>Safari Traveller</h4>
+                    <p>
+                        Africa's AI-ready safari discovery platform. We help travellers find the perfect safari lodge,
+                        private guide, or tour operator across every African country. Each listing is enriched with
+                        entity authority audits to ensure you connect with verified, reputable properties.
+                    </p>
                 </div>
-                <div class="footer-col">
-                    <h5>Explore</h5>
-                    <ul>
-                        <li><a href="/public/">Home</a></li>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
                         <li><a href="/public/search.php">Browse Properties</a></li>
-                        <li><a href="/public/search.php?sort=score">Top AI Scores</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h5>For Lodges</h5>
-                    <ul>
+                        <li><a href="/public/country.php">Safari by Country</a></li>
+                        <li><a href="/public/about.php">About Us</a></li>
                         <li><a href="/public/claim.php">Claim Your Listing</a></li>
-                        <li><a href="https://safariwebonline.com" target="_blank" rel="noopener">Safari Web Online</a></li>
                     </ul>
                 </div>
-                <div class="footer-col">
-                    <h5>Top Countries</h5>
-                    <ul>
-                        <li><a href="/public/country.php?slug=ZA">South Africa</a></li>
-                        <li><a href="/public/country.php?slug=KE">Kenya</a></li>
-                        <li><a href="/public/country.php?slug=TZ">Tanzania</a></li>
-                        <li><a href="/public/country.php?slug=BW">Botswana</a></li>
-                        <li><a href="/public/country.php?slug=NA">Namibia</a></li>
+
+                <!-- Property Owners -->
+                <div>
+                    <h4>Property Owners</h4>
+                    <ul class="footer-links">
+                        <li><a href="/public/claim.php">Claim Your Listing</a></li>
+                        <li><a href="/public/about.php#entity-audit">Entity Authority Audit</a></li>
+                        <li><a href="/public/about.php#ai-readiness">AI Readiness Score</a></li>
+                        <li><a href="/public/about.php#faq">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4>Contact</h4>
+                    <ul class="footer-contact">
+                        <li>Hoedspruit, Limpopo, South Africa</li>
+                        <li>info@safari-traveller.com</li>
                     </ul>
                 </div>
             </div>
+
             <div class="footer-bottom">
-                <p>&copy; <?= date('Y') ?> Safari Traveller. Built by <a href="https://safariwebonline.com" target="_blank" rel="noopener">Safari Web Online</a>, Hoedspruit, South Africa.</p>
+                <p>&copy; <?= $year ?> Safari Traveller. All rights reserved.</p>
+                <p>Powered by <a href="https://safariweb.online" target="_blank" rel="noopener">Safari Web Online</a></p>
             </div>
         </div>
     </footer>
+
+    <!-- Main JavaScript -->
     <script src="/assets/js/app.js"></script>
-    <?= $extraScripts ?>
+
+    <?php if (!empty($extraJs)): ?>
+    <?= $extraJs ?>
+    <?php endif; ?>
+
 </body>
 </html>
-    <?php
+<?php
 }
 
 /**
- * Render the admin HTML header with sidebar navigation.
+ * Render the admin page header (<!DOCTYPE> through opening content area).
  *
- * @param string $pageTitle  The page title shown in the browser and header
- * @param string $extraHead  Additional markup to inject into <head>
- * @return void              Outputs HTML directly
+ * @param string $title Page title for the admin area
  */
-function renderAdminHeader(string $pageTitle = 'Dashboard', string $extraHead = ''): void
+function renderAdminHeader(string $title): void
 {
-    $titleEsc = htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8');
-    $currentPage = basename($_SERVER['PHP_SELF']);
-    $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'UTF-8');
-    $adminEmail = htmlspecialchars($_SESSION['admin_email'] ?? '', ENT_QUOTES, 'UTF-8');
-    ?>
+    $siteTitle = 'Safari Traveller Admin';
+    $fullTitle = $title
+        ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . ' | ' . $siteTitle
+        : $siteTitle;
+
+    // Determine the current page for active sidebar link highlighting
+    $currentPage = basename($_SERVER['PHP_SELF'] ?? '', '.php');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $titleEsc ?> - Safari Traveller Admin</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="noindex, nofollow">
+    <title><?= $fullTitle ?></title>
+
+    <!-- Favicon placeholder -->
+    <link rel="icon" type="image/png" href="/assets/img/favicon.png">
+
+    <!-- Preconnect to Google Fonts for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Main stylesheet (includes Poppins @import) -->
     <link rel="stylesheet" href="/assets/css/style.css">
-    <?= $extraHead ?>
 </head>
 <body>
+
     <div class="admin-layout">
-        <div class="admin-sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-        <aside class="admin-sidebar" id="adminSidebar">
+
+        <!-- Admin Sidebar Overlay (mobile) -->
+        <div class="admin-sidebar-overlay"></div>
+
+        <!-- Admin Sidebar -->
+        <aside class="admin-sidebar">
             <div class="admin-sidebar-header">
-                <h2>Safari <span>Traveller</span></h2>
+                <h2>Safari Traveller</h2>
                 <span>Admin Panel</span>
             </div>
+
             <nav class="admin-sidebar-nav">
-                <a href="index.php" class="<?= $currentPage === 'index.php' ? 'active' : '' ?>">
-                    <span class="nav-icon">&#9632;</span> Dashboard
+                <a href="/admin/index.php" class="<?= $currentPage === 'index' ? 'active' : '' ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
                 </a>
-                <a href="properties.php" class="<?= $currentPage === 'properties.php' ? 'active' : '' ?>">
-                    <span class="nav-icon">&#9632;</span> Properties
+                <a href="/admin/properties.php" class="<?= $currentPage === 'properties' ? 'active' : '' ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Properties
                 </a>
-                <a href="queue.php" class="<?= $currentPage === 'queue.php' ? 'active' : '' ?>">
-                    <span class="nav-icon">&#9632;</span> Queue
+                <a href="/admin/queue.php" class="<?= $currentPage === 'queue' ? 'active' : '' ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    Queue
                 </a>
-                <a href="audits.php" class="<?= $currentPage === 'audits.php' ? 'active' : '' ?>">
-                    <span class="nav-icon">&#9632;</span> Audits
+                <a href="/admin/audits.php" class="<?= $currentPage === 'audits' ? 'active' : '' ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Audits
                 </a>
-                <a href="outreach.php" class="<?= $currentPage === 'outreach.php' ? 'active' : '' ?>">
-                    <span class="nav-icon">&#9632;</span> Outreach
+                <a href="/admin/outreach.php" class="<?= $currentPage === 'outreach' ? 'active' : '' ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    Outreach
                 </a>
-                <a href="settings.php" class="<?= $currentPage === 'settings.php' ? 'active' : '' ?>">
-                    <span class="nav-icon">&#9632;</span> Settings
+                <a href="/admin/settings.php" class="<?= $currentPage === 'settings' ? 'active' : '' ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings
                 </a>
             </nav>
+
             <div class="admin-sidebar-footer">
-                <div style="margin-bottom: 8px; font-size: 0.8rem;">
-                    <strong style="color: #fff;"><?= $adminName ?></strong><br>
-                    <span style="font-size: 0.7rem;"><?= $adminEmail ?></span>
-                </div>
-                <a href="login.php?logout=1">Logout</a>
+                <a href="/" target="_blank" rel="noopener">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon" style="width:16px;height:16px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    View Site
+                </a>
             </div>
         </aside>
+
+        <!-- Admin Content Area -->
         <div class="admin-content">
+
+            <!-- Mobile sidebar toggle + page title -->
             <div class="admin-content-header">
-                <div style="display:flex;align-items:center;gap:0.75rem;">
-                    <button class="admin-sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
-                        <span style="font-size:1.5rem;">&#9776;</span>
-                    </button>
-                    <h1><?= $titleEsc ?></h1>
-                </div>
+                <button class="admin-sidebar-toggle" aria-label="Toggle sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <h1><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></h1>
             </div>
-    <?php
+
+<?php
 }
 
 /**
- * Render the admin HTML footer with closing tags and sidebar toggle script.
+ * Render the admin page footer (closing admin-content, admin-layout, body, html).
  *
- * @param string $extraScripts Additional <script> tags to include before </body>
- * @return void                Outputs HTML directly
+ * @param string $extraJs Additional JavaScript (raw <script> tags or inline JS)
  */
-function renderAdminFooter(string $extraScripts = ''): void
+function renderAdminFooter(string $extraJs = ''): void
 {
-    ?>
+?>
         </div><!-- /.admin-content -->
     </div><!-- /.admin-layout -->
-    <script>
-    function toggleSidebar() {
-        var sidebar = document.getElementById('adminSidebar');
-        var overlay = document.getElementById('sidebarOverlay');
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('open');
-    }
-    </script>
+
+    <!-- Main JavaScript -->
     <script src="/assets/js/app.js"></script>
-    <?= $extraScripts ?>
+
+    <?php if (!empty($extraJs)): ?>
+    <?= $extraJs ?>
+    <?php endif; ?>
+
 </body>
 </html>
-    <?php
+<?php
 }
