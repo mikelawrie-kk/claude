@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "swo-bridge": {
+      "type": "http",
+      "url": "https://tools.safariweb.online/mcp-v3/mcp"
+    }
+  }
+}
