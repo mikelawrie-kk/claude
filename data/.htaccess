@@ -1,0 +1,8 @@
+# File: data/.htaccess
+# Description: Block all direct web access to data files (SQLite DB, logs, locks)
+# Project: Pulse v1
+# Version: 1.0.0
+# Created: 2026-05-14 09:00 SAST
+# Modified: 2026-05-14 09:00 SAST
+
+Require all denied

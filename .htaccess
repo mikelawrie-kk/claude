@@ -1,0 +1,24 @@
+# File: .htaccess
+# Description: Root rewrite + access control for Pulse v1 webroot
+# Project: Pulse v1
+# Version: 1.0.0
+# Created: 2026-05-14 09:00 SAST
+# Modified: 2026-05-14 09:00 SAST
+
+RewriteEngine On
+
+# Block direct access to non-public directories
+RewriteRule ^app(/|$)  - [F,L]
+RewriteRule ^data(/|$) - [F,L]
+RewriteRule ^cron(/|$) - [F,L]
+
+# Route all non-existent root requests through public/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L]
+
+DirectoryIndex public/index.php
+
+# Sensible defaults
+Options -Indexes
+ServerSignature Off
