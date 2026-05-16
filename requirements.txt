@@ -1,0 +1,25 @@
+# Filename:    requirements.txt
+# Description: Python dependencies for the Safari Media OS Phase 1 ingest worker.
+# Project:     media (Safari Media OS, Build #123)
+# Version:     1.0
+# Created:     2026-05-16 12:29 SAST
+# Modified:    2026-05-16 12:29 SAST
+# Changes:     v1.0 initial.
+
+# Anthropic SDK — Vision tagging via Claude Haiku 4.5
+anthropic>=0.40.0
+
+# Google Drive API — service-account read-only access
+google-api-python-client>=2.140.0
+google-auth>=2.34.0
+
+# MySQL on cPanel
+mysql-connector-python>=9.0.0
+
+# Imaging + EXIF
+Pillow>=10.4.0
+ExifRead>=3.0.0
+
+# CLIP (ViT-B/32 openai weights, 512-dim embeddings)
+open_clip_torch>=2.26.1
+torch>=2.4.0
