@@ -1,0 +1,9 @@
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://aerotel.co.za/" },
+    { "@type": "ListItem", "position": 2, "name": "Stay", "item": "https://aerotel.co.za/stay/" },
+    { "@type": "ListItem", "position": 3, "name": "Boeing 737-200 Cabins", "item": "https://aerotel.co.za/stay/boeing-737-cabins/" }
+  ]
+}

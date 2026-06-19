@@ -1,0 +1,80 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Hotel",
+  "@id": "https://aerotel.co.za/#hotel",
+  "name": "Aerotel Hoedspruit",
+  "alternateName": "Aerotel — Africa's only aircraft hotel",
+  "description": "Africa's only aircraft hotel. Sleep inside a converted Boeing 737-200 or the exclusive Boeing 727 VIP suite in the Zandspruit Bush & Aero Estate near Kruger National Park and the Panorama Route, Hoedspruit, South Africa.",
+  "url": "https://aerotel.co.za",
+  "telephone": "+27-87-655-6737",
+  "email": "reservations@aerotel.co.za",
+  "priceRange": "ZAR 2250–3250 per person per night",
+  "currenciesAccepted": "ZAR",
+  "paymentAccepted": "Cash, Credit Card, EFT",
+  "numberOfRooms": 9,
+  "petsAllowed": false,
+  "smokingAllowed": false,
+  "checkinTime": "14:00",
+  "checkoutTime": "10:00",
+  "image": [
+    "https://aerotel.co.za/images/aerotel-boeing-737-exterior.jpg",
+    "https://aerotel.co.za/images/aerotel-boeing-737-cabin.jpg",
+    "https://aerotel.co.za/images/aerotel-pool-sundowners.jpg"
+  ],
+  "logo": "https://aerotel.co.za/images/aerotel-logo.png",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "1406 Zandspruit Boulevard, R527, Zandspruit Bush & Aero Estate",
+    "addressLocality": "Hoedspruit",
+    "addressRegion": "Limpopo",
+    "postalCode": "1380",
+    "addressCountry": "ZA"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": -24.354530,
+    "longitude": 30.958450
+  },
+  "hasMap": "https://www.google.com/maps?q=-24.354530,30.958450",
+  "starRating": {
+    "@type": "Rating",
+    "ratingValue": "4",
+    "author": { "@type": "Organization", "name": "Tourism Grading Council of South Africa (TGCSA)" }
+  },
+  "potentialAction": {
+    "@type": "ReserveAction",
+    "target": "https://aerotel.co.za/book-sa.html"
+  },
+  "amenityFeature": [
+    { "@type": "LocationFeatureSpecification", "name": "Free WiFi", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Free on-site parking", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Swimming pool", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Air conditioning", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "En-suite bathrooms", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "On-site bar", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "On-site restaurant (The Runway)", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Breakfast included", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Adults only (12+)", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Wheelchair accessible", "value": false }
+  ],
+  "containsPlace": [
+    {
+      "@type": "Room",
+      "name": "Boeing 737-200 Cabin (BIL)",
+      "description": "Private cloud-themed cabin in a converted Boeing 737-200 with queen bed, en-suite bathroom, kitchenette and cockpit access. From R2,250 per person sharing, per night (B&B).",
+      "occupancy": { "@type": "QuantitativeValue", "maxValue": 2 }
+    },
+    {
+      "@type": "Suite",
+      "name": "Boeing 727 VIP Suite (SAL)",
+      "description": "Exclusive-use former government Boeing 727 with multiple bedrooms, full kitchen and living area, for 4–6 guests. R3,250 per person, per night (B&B).",
+      "occupancy": { "@type": "QuantitativeValue", "minValue": 4, "maxValue": 6 }
+    }
+  ],
+  "sameAs": [
+    "REPLACE_WITH_REAL_FACEBOOK_URL",
+    "REPLACE_WITH_REAL_INSTAGRAM_URL",
+    "REPLACE_WITH_REAL_TRIPADVISOR_URL",
+    "REPLACE_WITH_REAL_BOOKING_COM_URL"
+  ]
+}

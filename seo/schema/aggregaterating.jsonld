@@ -1,0 +1,23 @@
+{
+  "//": "CRITICAL: ratingValue and reviewCount MUST come from your own real, verifiable review data. Never fabricate, and per Google policy do not scrape values from TripAdvisor/Booking/Google. Merge into the main Hotel entity via the shared @id. Remove this file if you cannot supply genuine aggregated review data yet.",
+  "@context": "https://schema.org",
+  "@type": "Hotel",
+  "@id": "https://aerotel.co.za/#hotel",
+  "name": "Aerotel Hoedspruit",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "REAL_VALUE",
+    "reviewCount": "REAL_COUNT",
+    "bestRating": "5",
+    "worstRating": "1"
+  },
+  "review": [
+    {
+      "@type": "Review",
+      "author": { "@type": "Person", "name": "REAL_GUEST_NAME" },
+      "datePublished": "YYYY-MM-DD",
+      "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+      "reviewBody": "USE A GENUINE, VERIFIABLE GUEST TESTIMONIAL HERE."
+    }
+  ]
+}

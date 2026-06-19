@@ -1,0 +1,36 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do you really sleep inside the aircraft?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. The cabins are built inside a converted Boeing 737-200 and an exclusive-use Boeing 727 VIP suite, each with en-suite bathrooms, air conditioning and free WiFi." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the property suitable for children?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Aerotel is an adults-only property and does not accept guests under 12. (VERIFY: confirm whether the exclusive-use Boeing 727 suite allows children for group bookings.)" }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the rates per night?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The Boeing 737-200 cabins are R2,250 per person per night sharing, and the exclusive-use Boeing 727 VIP suite is R3,250 per person per night (minimum 4 guests). Rates include bed and breakfast." }
+    },
+    {
+      "@type": "Question",
+      "name": "How far is Aerotel from Kruger National Park and the nearest airport?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Aerotel is close to Hoedspruit Eastgate Airport (HDS) and is a short drive to the Orpen Gate of Kruger National Park. Kruger Mpumalanga International Airport (KMIA) is also within driving distance. (VERIFY exact distances/times before publishing.)" }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the check-in and check-out times?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Check-in is from 14:00 and check-out is at 10:00 (SAST, UTC+2). (VERIFY against current policy.)" }
+    },
+    {
+      "@type": "Question",
+      "name": "Can day visitors tour the aircraft without staying overnight?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Day-visitor experiences such as aircraft tours and access to The Runway are available. Please contact reservations to book. (VERIFY current day-visit offering.)" }
+    }
+  ]
+}
