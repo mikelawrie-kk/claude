@@ -45,12 +45,24 @@ These changes live on a **separate cPanel account** from the SWO hub:
 
 | File | What it is |
 |---|---|
+| `00-FACTS-AND-KB.md` | **Consolidated authoritative facts** (NAP, product, rates, location, voice) — makes this folder self-contained; no external KB needed. |
 | `IMPLEMENTATION-RUNBOOK.md` | Step-by-step apply guide for the Aerotel-connected session (the action plan). |
+| `AUDIT-REPORT-AND-AGENT-PLAN.md` | Executive audit summary, recommendations, and the per-agent execution plan. |
 | `01-technical-onpage-audit.md` | Technical & on-page audit + title/meta rewrite tables. |
 | `02-keyword-content-strategy.md` | Keyword clusters (local + overseas), page→keyword map, 12-post content plan, digital-PR/link angles. |
 | `03-local-international-structured-data.md` | Google Business Profile plan, citation targets, hreflang/geo guidance, structured-data notes. |
-| `schema/*.json` | Ready-to-paste schema.org JSON-LD, grounded in the verified Aerotel KB (real coordinates, rates, units). |
+| `schema/*.jsonld` | Ready-to-paste schema.org JSON-LD, grounded in the verified Aerotel KB (real coordinates, rates, units). |
+| `assets/IMAGE-MANIFEST.md` | The shot list: every image needed, naming, alt text, where used, technical targets. |
+| `assets/originals/` | Drop-folder for original image/video masters (see its README — don't bloat git). |
 | `FACTS-TO-VERIFY.md` | Conflicting facts between the live site, the internal KB, and the brief — confirm these before publishing. |
+
+> **This folder is the complete, self-contained package.** Everything the implementation needs is here except the binary image masters (which you place in `assets/originals/` or host on the origin/Cloudflare — see below).
+
+## Images & Cloudflare
+
+- **Where to store masters:** simplest and most agent-friendly is the **cPanel origin** (e.g. `/home/aerotelco/public_html/images/`). The Aerotel Bridge can then read, rename, alt-tag, optimise, and wire them into HTML + schema. Put **Cloudflare in front as a proxy (orange-cloud)** and enable Polish / auto WebP-AVIF so the edge handles format + performance automatically — you get the CDN win without moving the files off-origin.
+- **Cloudflare Images / R2 (optional offload):** fine for taking weight off the origin, but the agent has **no Cloudflare connector** — it can't browse or pull from your Cloudflare account. If you store images there, paste the **public URL pattern** (e.g. `https://imagedelivery.net/<acct>/<id>/<variant>` or your R2/custom domain) and the agent will reference those URLs in `<img>`, `og:image`, and schema.
+- **Bottom line on "can you find them there?":** on the **origin via the bridge — yes**; on **Cloudflare directly — no**, give me the URLs. Either way the SEO essentials (descriptive filenames, alt text, right dimensions, WebP/AVIF, lazy-load, LCP preload) are specified in `assets/IMAGE-MANIFEST.md`.
 
 ---
 
