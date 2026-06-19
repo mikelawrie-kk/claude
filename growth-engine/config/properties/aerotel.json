@@ -1,0 +1,65 @@
+{
+  "slug": "aerotel",
+  "name": "Aerotel Hoedspruit",
+  "domain": "aerotel.co.za",
+  "locale": "en-ZA",
+  "timezone": "Africa/Johannesburg",
+  "currency": "ZAR",
+  "audiences": [
+    { "key": "local", "label": "SA / Kruger-gateway intent", "markets": ["ZA"], "notes": "Crowded commercial field; compete on long-tail Hoedspruit + unusual-stay terms, not generic 'Kruger accommodation'." },
+    { "key": "overseas", "label": "Bucket-list / unusual-stay curiosity", "markets": ["US", "UK", "DE", "NL"], "notes": "The product IS the search; almost no SA competition. Primary growth lane." }
+  ],
+  "brand": {
+    "voice": "Sophisticated, adventurous, warm. Aviation meets Africa.",
+    "power_phrases": ["where legends land", "sleep in a Boeing", "wake to the bushveld", "aviation meets Africa"],
+    "forbidden_words": ["nestled", "hidden gem", "best-kept secret", "world-class", "luxurious oasis"],
+    "tone_notes": "Reads naturally to both SA locals and overseas travellers; avoid SA-only slang in conversion copy."
+  },
+  "kb_facts": {
+    "nap": "Aerotel Hoedspruit, 1406 Zandspruit Boulevard, R527, Zandspruit Bush & Aero Estate, Hoedspruit, 1380, Limpopo, South Africa, +27 87 655 6737, reservations@aerotel.co.za",
+    "usps": [
+      "Africa's only aircraft hotel — sleep inside a converted Boeing 737-200 or an exclusive-use ex-government Boeing 727 VIP jet",
+      "Gateway to Kruger National Park and the Panorama Route, minutes from Hoedspruit Eastgate (HDS)",
+      "The viral 'planes that broke the internet' road-journey story"
+    ],
+    "facts_gate": "../../seo/FACTS-TO-VERIFY.md",
+    "coordinates": "-24.354530, 30.958450",
+    "rates_2026_zar": { "boeing_737_pp_sharing": 2250, "boeing_727_pp_min4": 3250 },
+    "policies": "Adults-only (12+), no pets, not wheelchair accessible"
+  },
+  "goals": {
+    "primary_conversion": "Direct booking via book-sa.html",
+    "money_pages": ["/book-sa.html", "/stay", "/cabins", "/boeing-737", "/boeing-727"],
+    "kpis": ["Organic clicks", "Direct-booking conversions", "Branded vs non-branded query share", "Overseas (US/UK/DE/NL) organic sessions", "GBP calls/direction requests"]
+  },
+  "keyword_clusters": [
+    { "name": "Sleep in a Boeing / aircraft hotel", "intent": "commercial", "audience": "overseas", "seed_terms": ["sleep in an aeroplane", "airplane hotel", "Boeing 737 hotel", "Boeing 727 hotel", "aircraft hotel Africa"] },
+    { "name": "Unique / unusual stays South Africa", "intent": "commercial", "audience": "overseas", "seed_terms": ["unique places to stay South Africa", "unusual hotels near Kruger", "bucket list accommodation South Africa"] },
+    { "name": "Hoedspruit & Kruger gateway", "intent": "mixed", "audience": "local", "seed_terms": ["Hoedspruit accommodation", "accommodation near Kruger", "Hoedspruit weekend getaway", "Panorama Route from Hoedspruit"] },
+    { "name": "Branded / viral", "intent": "navigational", "audience": "local", "seed_terms": ["Aerotel", "Aerotel Hoedspruit", "planes that broke the internet"] }
+  ],
+  "competitors": ["Costa Verde (Costa Rica)", "Jumbo Stay Stockholm", "Vliegtuigsuite Teuge (NL)", "Radisson Safari", "krugerpark.co.za", "Host Unusual"],
+  "analytics": {
+    "gsc":     { "property_url": "https://aerotel.co.za/", "auth_ref": "TODO: service-account ref", "enabled": false },
+    "ga4":     { "property_id": "TODO", "auth_ref": "TODO", "enabled": false },
+    "clarity": { "project_id": "TODO", "auth_ref": "TODO", "enabled": false },
+    "bing_wmt":{ "site_url": "https://aerotel.co.za/", "auth_ref": "TODO", "enabled": false }
+  },
+  "channels": ["instagram", "facebook", "tiktok", "youtube", "blog", "email"],
+  "cadence": {
+    "horizon_days": 90,
+    "blogs_per_week": 1,
+    "social_per_week": 4,
+    "theme_granularity": "month",
+    "report_day": "mon"
+  },
+  "automation": {
+    "publish": "review",
+    "ingest": "csv"
+  },
+  "deploy": {
+    "cpanel_user": "aerotelco",
+    "server_path": "/home/aerotelco/public_html/",
+    "bridge_ref": "Aerotel Bridge"
+  }
+}

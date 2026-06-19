@@ -1,0 +1,55 @@
+{
+  "slug": "REPLACE-me-lowercase-hyphen",
+  "name": "Property display name",
+  "domain": "example.co.za",
+  "locale": "en-ZA",
+  "timezone": "Africa/Johannesburg",
+  "currency": "ZAR",
+  "audiences": [
+    { "key": "local", "label": "", "markets": ["ZA"], "notes": "" },
+    { "key": "overseas", "label": "", "markets": [], "notes": "" }
+  ],
+  "brand": {
+    "voice": "",
+    "power_phrases": [],
+    "forbidden_words": [],
+    "tone_notes": ""
+  },
+  "kb_facts": {
+    "nap": "",
+    "usps": [],
+    "facts_gate": ""
+  },
+  "goals": {
+    "primary_conversion": "",
+    "money_pages": [],
+    "kpis": []
+  },
+  "keyword_clusters": [
+    { "name": "", "intent": "mixed", "audience": "", "seed_terms": [] }
+  ],
+  "competitors": [],
+  "analytics": {
+    "gsc":     { "property_url": "", "auth_ref": "", "enabled": false },
+    "ga4":     { "property_id": "", "auth_ref": "", "enabled": false },
+    "clarity": { "project_id": "", "auth_ref": "", "enabled": false },
+    "bing_wmt":{ "site_url": "", "auth_ref": "", "enabled": false }
+  },
+  "channels": ["blog", "instagram", "facebook"],
+  "cadence": {
+    "horizon_days": 90,
+    "blogs_per_week": 1,
+    "social_per_week": 3,
+    "theme_granularity": "month",
+    "report_day": "mon"
+  },
+  "automation": {
+    "publish": "review",
+    "ingest": "csv"
+  },
+  "deploy": {
+    "cpanel_user": "",
+    "server_path": "",
+    "bridge_ref": ""
+  }
+}

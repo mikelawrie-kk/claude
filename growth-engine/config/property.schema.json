@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://swo/growth-engine/property.schema.json",
+  "title": "Growth Engine Property Config",
+  "description": "The property-agnostic contract. One file per property under config/properties/<slug>.json. Everything property-specific lives here; the engine/workflows stay generic.",
+  "type": "object",
+  "required": ["slug", "name", "domain", "locale", "timezone", "brand", "goals", "analytics", "cadence"],
+  "additionalProperties": false,
+  "properties": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Stable id, used as property_id key and filename." },
+    "name": { "type": "string" },
+    "domain": { "type": "string", "format": "hostname" },
+    "locale": { "type": "string", "description": "BCP-47, e.g. en-ZA." },
+    "timezone": { "type": "string", "description": "IANA tz, e.g. Africa/Johannesburg." },
+    "currency": { "type": "string", "description": "ISO 4217, e.g. ZAR." },
+    "audiences": {
+      "type": "array",
+      "description": "Distinct searcher mindsets to target.",
+      "items": {
+        "type": "object",
+        "required": ["key", "label"],
+        "properties": {
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "markets": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "brand": {
+      "type": "object",
+      "required": ["voice", "power_phrases", "forbidden_words"],
+      "properties": {
+        "voice": { "type": "string" },
+        "power_phrases": { "type": "array", "items": { "type": "string" } },
+        "forbidden_words": { "type": "array", "items": { "type": "string" } },
+        "tone_notes": { "type": "string" }
+      }
+    },
+    "kb_facts": {
+      "type": "object",
+      "description": "Authoritative, fact-checkable facts the engine may assert. Free-form per property.",
+      "properties": {
+        "nap": { "type": "string" },
+        "usps": { "type": "array", "items": { "type": "string" } },
+        "facts_gate": { "type": "string", "description": "Path/URL to a facts-to-verify gate, if any." }
+      },
+      "additionalProperties": true
+    },
+    "goals": {
+      "type": "object",
+      "required": ["primary_conversion", "money_pages"],
+      "properties": {
+        "primary_conversion": { "type": "string", "description": "e.g. direct booking via book-sa.html" },
+        "money_pages": { "type": "array", "items": { "type": "string" }, "description": "URLs/paths that earn revenue; raise Value in scoring." },
+        "kpis": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "keyword_clusters": {
+      "type": "array",
+      "description": "Pillars the planner organises themes/content around. Can point at an external strategy doc.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "intent": { "type": "string", "enum": ["informational", "commercial", "transactional", "navigational", "mixed"] },
+          "audience": { "type": "string" },
+          "seed_terms": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "competitors": { "type": "array", "items": { "type": "string" } },
+    "analytics": {
+      "type": "object",
+      "description": "Source identifiers + a reference to where credentials live (NOT the secrets themselves).",
+      "properties": {
+        "gsc":     { "type": "object", "properties": { "property_url": { "type": "string" }, "auth_ref": { "type": "string" }, "enabled": { "type": "boolean" } } },
+        "ga4":     { "type": "object", "properties": { "property_id": { "type": "string" }, "auth_ref": { "type": "string" }, "enabled": { "type": "boolean" } } },
+        "clarity": { "type": "object", "properties": { "project_id": { "type": "string" }, "auth_ref": { "type": "string" }, "enabled": { "type": "boolean" } } },
+        "bing_wmt":{ "type": "object", "properties": { "site_url": { "type": "string" }, "auth_ref": { "type": "string" }, "enabled": { "type": "boolean" } } }
+      }
+    },
+    "channels": {
+      "type": "array",
+      "description": "Active social/content channels the planner schedules for.",
+      "items": { "type": "string", "enum": ["instagram", "facebook", "tiktok", "youtube", "linkedin", "x", "pinterest", "blog", "email"] }
+    },
+    "cadence": {
+      "type": "object",
+      "required": ["horizon_days", "blogs_per_week", "social_per_week"],
+      "properties": {
+        "horizon_days": { "type": "integer", "default": 90 },
+        "blogs_per_week": { "type": "number" },
+        "social_per_week": { "type": "number" },
+        "theme_granularity": { "type": "string", "enum": ["month", "fortnight"], "default": "month" },
+        "report_day": { "type": "string", "enum": ["mon","tue","wed","thu","fri","sat","sun"], "default": "mon" }
+      }
+    },
+    "automation": {
+      "type": "object",
+      "properties": {
+        "publish": { "type": "string", "enum": ["draft", "review", "auto"], "default": "review", "description": "draft=write only; review=schedule pending approval; auto=publish (use with care)." },
+        "ingest": { "type": "string", "enum": ["csv", "api"], "default": "csv" }
+      }
+    },
+    "deploy": {
+      "type": "object",
+      "description": "Where the property's site lives, for the producing/publishing step.",
+      "properties": {
+        "cpanel_user": { "type": "string" },
+        "server_path": { "type": "string" },
+        "bridge_ref": { "type": "string", "description": "Which MCP bridge/connector writes this property." }
+      }
+    }
+  }
+}
