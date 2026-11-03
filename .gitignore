@@ -1,0 +1,11 @@
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+data/.tick.lock
+data/logs/*.log
+data/logs/*.log.*
+app/config/pulse.config.php
+app/config/jobs.config.php
+install.php.done
+.DS_Store
