@@ -3,10 +3,12 @@
  * File: install.php
  * Description: One-file Pulse installer. Idempotent. Creates all 10 tables, prompts admin + first site + mail, writes app/config/pulse.config.php, and gates completion on §A1 (first site live, test tick written, test email sent). Renames itself to install.php.done on success.
  * Project: Pulse v1
- * Version: 1.0.0
+ * Version: 1.1.0
  * Created: 2026-05-14 10:30 SAST
- * Modified: 2026-05-14 10:30 SAST
+ * Modified: 2026-11-03 09:00 SAST
  * Changes:
+ *   1.1.0 (2026-11-03 09:00) — added site_entity table (OTA sameAs, founder/operator chain, legal entity, llm.txt);
+ *                              enabled TechSEOMonitor job at install (Week 2 modules now present)
  *   1.0.0 (2026-05-14 10:30) — initial creation
  */
 
@@ -223,6 +225,30 @@ function ensure_schema(): void
             detail TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )',
+        'CREATE TABLE IF NOT EXISTS site_entity (
+            id INTEGER PRIMARY KEY,
+            site_id INTEGER UNIQUE REFERENCES sites(id),
+            entity_type TEXT DEFAULT \'LodgingBusiness\',
+            legal_name TEXT,
+            founding_date TEXT,
+            slogan TEXT,
+            description TEXT,
+            gbp_url TEXT,
+            llm_txt_url TEXT,
+            rating_value REAL,
+            rating_count INTEGER,
+            alternate_names_json TEXT,
+            keywords_json TEXT,
+            knows_about_json TEXT,
+            ota_urls_json TEXT,
+            social_urls_json TEXT,
+            founder_json TEXT,
+            operator_json TEXT,
+            parent_org_json TEXT,
+            area_served_json TEXT,
+            extras_json TEXT,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )',
     ];
     foreach ($ddl as $sql) {
         $db->pdo()->exec($sql);
@@ -411,12 +437,16 @@ function seed_default_job(): void
         return;
     }
     $db->execute(
-        'INSERT INTO jobs (name, module, cron_schedule, enabled, config_json) VALUES (?, ?, ?, 0, ?)',
+        'INSERT INTO jobs (name, module, cron_schedule, enabled, config_json) VALUES (?, ?, ?, 1, ?)',
         [
             'TechSEOMonitor',
             'TechSEOMonitor',
             '0 6 * * 1',
-            json_encode(['note' => 'Module lands in Week 2. Disabled at install.'], JSON_UNESCAPED_SLASHES),
+            json_encode([
+                'checks' => ['Schema', 'Indexing', 'CWV', 'BrokenLink', 'Redirect', 'Robots', 'HTTPStatus'],
+                'max_internal_links' => 100,
+                'pagespeed_api_key' => '',
+            ], JSON_UNESCAPED_SLASHES),
         ]
     );
 }

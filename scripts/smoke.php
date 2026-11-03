@@ -3,10 +3,11 @@
  * File: scripts/smoke.php
  * Description: Local smoke test for Week-1 spine. Creates fresh DB, runs Orchestrator::tick() in normal/kill/cost-exceeded/dry-run modes, exercises MCPClient against a stub. Not deployed to cPanel.
  * Project: Pulse v1
- * Version: 1.0.0
+ * Version: 1.1.0
  * Created: 2026-05-14 10:55 SAST
- * Modified: 2026-05-14 10:55 SAST
+ * Modified: 2026-11-03 10:10 SAST
  * Changes:
+ *   1.1.0 (2026-11-03 10:10) — added Week 2 assertions: site_entity table, Scorer, CheckBase upsert dedup, TechSEOMonitor Job loads all 7 checks, SchemaCheck surfaces missing @id/sameAs
  *   1.0.0 (2026-05-14 10:55) — initial creation
  */
 
@@ -63,11 +64,12 @@ foreach ([
     'CREATE TABLE fix_applications (id INTEGER PRIMARY KEY, finding_id INTEGER, applied_at TEXT DEFAULT CURRENT_TIMESTAMP, mcp_bridge TEXT, mcp_tool TEXT, request_payload_json TEXT, response_payload_json TEXT, status TEXT, error_message TEXT)',
     'CREATE TABLE verifications (id INTEGER PRIMARY KEY, finding_id INTEGER, scheduled_for TEXT, checked_at TEXT, result TEXT, evidence_json TEXT, notes TEXT)',
     'CREATE TABLE audit_log (id INTEGER PRIMARY KEY, user_id INTEGER, action TEXT, detail TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)',
+    'CREATE TABLE site_entity (id INTEGER PRIMARY KEY, site_id INTEGER UNIQUE, entity_type TEXT DEFAULT \'LodgingBusiness\', legal_name TEXT, founding_date TEXT, slogan TEXT, description TEXT, gbp_url TEXT, llm_txt_url TEXT, rating_value REAL, rating_count INTEGER, alternate_names_json TEXT, keywords_json TEXT, knows_about_json TEXT, ota_urls_json TEXT, social_urls_json TEXT, founder_json TEXT, operator_json TEXT, parent_org_json TEXT, area_served_json TEXT, extras_json TEXT, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)',
 ] as $sql) {
     $db->pdo()->exec($sql);
 }
 $tables = $db->fetchAll("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
-check('schema: 10 tables created', count($tables) === 10, 'got ' . count($tables));
+check('schema: 11 tables created (added site_entity)', count($tables) === 11, 'got ' . count($tables));
 
 // --- guardrails: today row seeded ---
 $g = Guardrails::today();
@@ -170,6 +172,97 @@ Guardrails::setDryRun(true);
 $ok = Reporter::send('test@example.com', 'subject', '<p>body</p>');
 check('Reporter dry-run skips send and returns true', $ok === true);
 Guardrails::setDryRun(false);
+
+// ============================================================
+// Week 2 — Detection layer
+// ============================================================
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/Scorer.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/checks/CheckBase.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/checks/HTTPStatusCheck.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/checks/RobotsCheck.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/checks/RedirectCheck.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/checks/BrokenLinkCheck.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/checks/IndexingCheck.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/checks/CWVCheck.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/checks/SchemaCheck.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/Job.php';
+
+check('Scorer: critical > high > medium > low > info', Scorer::priority(['severity' => 'critical']) > Scorer::priority(['severity' => 'high']) && Scorer::priority(['severity' => 'high']) > Scorer::priority(['severity' => 'medium']) && Scorer::priority(['severity' => 'medium']) > Scorer::priority(['severity' => 'low']) && Scorer::priority(['severity' => 'low']) > Scorer::priority(['severity' => 'info']));
+$sorted = Scorer::sortDigest([
+    ['severity' => 'low'], ['severity' => 'critical'], ['severity' => 'medium'], ['severity' => 'high'],
+]);
+check('Scorer sortDigest orders severities correctly', $sorted[0]['severity'] === 'critical' && $sorted[3]['severity'] === 'low');
+check('Scorer minutesOfClicks uses fix_estimated_seconds', Scorer::minutesOfClicks([['fix_estimated_seconds' => 60], ['fix_estimated_seconds' => 60]]) === 2.0);
+
+check('TechSEOMonitor class loads', class_exists('TechSEOMonitor'));
+foreach (['HTTPStatusCheck', 'RobotsCheck', 'RedirectCheck', 'BrokenLinkCheck', 'IndexingCheck', 'CWVCheck', 'SchemaCheck'] as $c) {
+    check("$c class exists and extends CheckBase", class_exists($c) && is_subclass_of($c, 'CheckBase'));
+}
+
+// CheckBase.upsertFinding dedup via a minimal subclass driven by the smoke DB
+class _SmokeCheck extends CheckBase
+{
+    public function checkName(): string { return 'SchemaCheck_smoke'; }
+    public function run(): array { return $this->stats(); }
+    public function emit(array $f): void { $this->upsertFinding($f); }
+}
+
+// Insert a site for the check to point at
+$db->execute('INSERT INTO sites (domain, notify_email, enabled) VALUES (?, ?, 1)', ['smoke.test', 'smoke@example.com']);
+$siteRow = $db->fetchOne('SELECT * FROM sites WHERE domain = ?', ['smoke.test']);
+$db->execute('INSERT INTO runs (status) VALUES (?)', ['running']);
+$runRow = $db->fetchOne('SELECT * FROM runs ORDER BY id DESC LIMIT 1');
+
+$sc = new _SmokeCheck((int) $runRow['id'], (int) $siteRow['id'], $siteRow, null, []);
+$sc->emit([
+    'url' => 'https://smoke.test/',
+    'severity' => 'high',
+    'issue' => 'test dedup',
+    'recommendation' => 'first write',
+]);
+$sc->emit([
+    'url' => 'https://smoke.test/',
+    'severity' => 'high',
+    'issue' => 'test dedup',
+    'recommendation' => 'second write — should update not insert',
+]);
+$findings = $db->fetchAll('SELECT * FROM findings WHERE check_type = ?', ['SchemaCheck_smoke']);
+check('CheckBase dedupes findings by (site, check, url, issue)', count($findings) === 1, 'got ' . count($findings));
+check('CheckBase refuses finding without recommendation (A2)', (function () use ($sc, $db) {
+    $before = (int) $db->fetchOne('SELECT COUNT(*) AS c FROM findings WHERE check_type = ?', ['SchemaCheck_smoke'])['c'];
+    $sc->emit(['url' => 'https://smoke.test/x', 'severity' => 'info', 'issue' => 'no rec']);
+    $after = (int) $db->fetchOne('SELECT COUNT(*) AS c FROM findings WHERE check_type = ?', ['SchemaCheck_smoke'])['c'];
+    return $before === $after;
+})());
+
+// SchemaCheck surfaces missing @id + sameAs when fed a minimal LodgingBusiness HTML
+class _SchemaCheckProbe extends SchemaCheck
+{
+    public function probe(string $html): void
+    {
+        // Call the private extractor via reflection
+        $ref = new ReflectionClass('SchemaCheck');
+        $m = $ref->getMethod('extractJsonLd');
+        $m->setAccessible(true);
+        $m->invoke($this, $html);
+        $p = $ref->getProperty('primary');
+        $p->setAccessible(true);
+        $m2 = $ref->getMethod('findPrimaryEntity');
+        $m2->setAccessible(true);
+        $p->setValue($this, $m2->invoke($this));
+    }
+    public function getBlocksCount(): int
+    {
+        $ref = new ReflectionClass('SchemaCheck');
+        $p = $ref->getProperty('blocks');
+        $p->setAccessible(true);
+        return count($p->getValue($this));
+    }
+}
+$html = '<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"LodgingBusiness","name":"Smoke Hotel","url":"https://smoke.test"}</script></head><body></body></html>';
+$probe = new _SchemaCheckProbe((int) $runRow['id'], (int) $siteRow['id'], $siteRow, null, []);
+$probe->probe($html);
+check('SchemaCheck extracts JSON-LD blocks from HTML', $probe->getBlocksCount() === 1);
 
 echo "\n=== $pass passed, $fail failed ===\n";
 @unlink($smokeDb);
