@@ -3,14 +3,16 @@
  * File: app/jobs/TechSEOMonitor/Job.php
  * Description: Entry point for Dispatcher. Loads the 7 TechSEOMonitor check modules, runs each against the given site, aggregates stats. Any check that throws is caught and recorded; the run continues.
  * Project: Pulse v1
- * Version: 1.0.0
+ * Version: 1.1.0
  * Created: 2026-11-03 09:25 SAST
- * Modified: 2026-11-03 09:25 SAST
+ * Modified: 2026-11-03 14:40 SAST
  * Changes:
+ *   1.1.0 (2026-11-03 14:40) — invoke FixGenerator after every check pass so open findings carry a fix_payload_json before Mike sees them
  *   1.0.0 (2026-11-03 09:25) — initial creation
  */
 
 require_once __DIR__ . '/Scorer.php';
+require_once __DIR__ . '/FixGenerator.php';
 require_once __DIR__ . '/checks/CheckBase.php';
 require_once __DIR__ . '/checks/HTTPStatusCheck.php';
 require_once __DIR__ . '/checks/RobotsCheck.php';
@@ -82,11 +84,26 @@ class TechSEOMonitor
 
         $this->autoResolveStale($runId, $siteId);
 
+        $fixerStats = [];
+        try {
+            $fixerStats = FixGenerator::generate($site, $entity, $config);
+            Logger::info('TechSEOMonitor fix generation complete', [
+                'site' => $site['domain'],
+                'per_fixer' => $fixerStats,
+            ]);
+        } catch (Throwable $e) {
+            Logger::error('TechSEOMonitor fix generation failed', [
+                'site' => $site['domain'],
+                'err' => $e->getMessage(),
+            ]);
+        }
+
         return [
             'rows_processed' => $totalNew + $totalUpdated,
             'rows_failed' => $totalFailed,
             'cost_usd' => $totalCost,
             'per_check' => $perCheck,
+            'per_fixer' => $fixerStats,
         ];
     }
 

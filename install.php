@@ -134,6 +134,7 @@ function ensure_schema(): void
             notify_email TEXT,
             mcp_bridge_url TEXT,
             mcp_bridge_key TEXT,
+            mcp_project TEXT,
             enabled INTEGER DEFAULT 1,
             auto_apply_threshold TEXT DEFAULT \'manual\',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -313,6 +314,7 @@ function handle_step2(array $post): array
     $notify = trim((string) ($post['site_notify_email'] ?? ''));
     $bridgeUrl = trim((string) ($post['site_mcp_bridge_url'] ?? ''));
     $bridgeKey = trim((string) ($post['site_mcp_bridge_key'] ?? ''));
+    $bridgeProject = trim((string) ($post['site_mcp_project'] ?? ''));
     $gsc = trim((string) ($post['site_gsc_property'] ?? ''));
     $mailMethod = (string) ($post['mail_method'] ?? 'php_mail');
     $mailFrom = trim((string) ($post['mail_from'] ?? ''));
@@ -355,6 +357,7 @@ function handle_step2(array $post): array
     $_SESSION['install']['site_notify_email'] = $notify;
     $_SESSION['install']['site_mcp_bridge_url'] = $bridgeUrl;
     $_SESSION['install']['site_mcp_bridge_key'] = $bridgeKey;
+    $_SESSION['install']['site_mcp_project'] = $bridgeProject;
     $_SESSION['install']['site_gsc_property'] = $gsc;
     $_SESSION['install']['mail_method'] = $mailMethod;
     $_SESSION['install']['mail_from'] = $mailFrom;
@@ -418,14 +421,20 @@ function upsert_first_site(): void
     $existing = $db->fetchOne('SELECT id FROM sites WHERE domain = ?', [$s['site_domain']]);
     if ($existing) {
         $db->execute(
-            'UPDATE sites SET notify_email = ?, mcp_bridge_url = ?, mcp_bridge_key = ?, gsc_property = ?, enabled = 1 WHERE id = ?',
-            [$s['site_notify_email'], $s['site_mcp_bridge_url'], $s['site_mcp_bridge_key'], $s['site_gsc_property'], $existing['id']]
+            'UPDATE sites SET notify_email = ?, mcp_bridge_url = ?, mcp_bridge_key = ?, mcp_project = ?, gsc_property = ?, enabled = 1 WHERE id = ?',
+            [$s['site_notify_email'], $s['site_mcp_bridge_url'], $s['site_mcp_bridge_key'], $s['site_mcp_project'], $s['site_gsc_property'], $existing['id']]
         );
+        $siteId = (int) $existing['id'];
     } else {
         $db->execute(
-            'INSERT INTO sites (domain, gsc_property, notify_email, mcp_bridge_url, mcp_bridge_key, enabled, auto_apply_threshold) VALUES (?, ?, ?, ?, ?, 1, ?)',
-            [$s['site_domain'], $s['site_gsc_property'], $s['site_notify_email'], $s['site_mcp_bridge_url'], $s['site_mcp_bridge_key'], 'manual']
+            'INSERT INTO sites (domain, gsc_property, notify_email, mcp_bridge_url, mcp_bridge_key, mcp_project, enabled, auto_apply_threshold) VALUES (?, ?, ?, ?, ?, ?, 1, ?)',
+            [$s['site_domain'], $s['site_gsc_property'], $s['site_notify_email'], $s['site_mcp_bridge_url'], $s['site_mcp_bridge_key'], $s['site_mcp_project'], 'manual']
         );
+        $siteId = $db->lastInsertId();
+    }
+    $existingEntity = $db->fetchOne('SELECT id FROM site_entity WHERE site_id = ?', [$siteId]);
+    if (!$existingEntity) {
+        $db->execute('INSERT INTO site_entity (site_id, entity_type) VALUES (?, ?)', [$siteId, 'LodgingBusiness']);
     }
 }
 
@@ -612,6 +621,7 @@ function render_step2(string $csrf, array $s): string
     $notify = htmlspecialchars((string) ($s['site_notify_email'] ?? ($s['admin_email'] ?? '')), ENT_QUOTES, 'UTF-8');
     $bridgeUrl = htmlspecialchars((string) ($s['site_mcp_bridge_url'] ?? 'https://aerotel.co.za/mcp/'), ENT_QUOTES, 'UTF-8');
     $bridgeKey = htmlspecialchars((string) ($s['site_mcp_bridge_key'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $bridgeProjectField = htmlspecialchars((string) ($s['site_mcp_project'] ?? 'root'), ENT_QUOTES, 'UTF-8');
     $gsc = htmlspecialchars((string) ($s['site_gsc_property'] ?? ''), ENT_QUOTES, 'UTF-8');
     $mailFrom = htmlspecialchars((string) ($s['mail_from'] ?? 'pulse@pulse.safariweb.online'), ENT_QUOTES, 'UTF-8');
     $mailFromName = htmlspecialchars((string) ($s['mail_from_name'] ?? 'SWO Pulse'), ENT_QUOTES, 'UTF-8');
@@ -632,6 +642,8 @@ function render_step2(string $csrf, array $s): string
     <input type="url" name="site_mcp_bridge_url" value="{$bridgeUrl}" placeholder="https://aerotel.co.za/mcp/">
     <label>MCP bridge key (the <code>?key=</code> value)</label>
     <input type="text" name="site_mcp_bridge_key" value="{$bridgeKey}">
+    <label>MCP project key (which project on the bridge, e.g. <code>root</code> or <code>admin</code>)</label>
+    <input type="text" name="site_mcp_project" value="{$bridgeProjectField}" placeholder="root">
     <label>GSC property (optional)</label>
     <input type="text" name="site_gsc_property" value="{$gsc}" placeholder="sc-domain:aerotel.co.za">
 

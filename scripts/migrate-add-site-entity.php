@@ -48,6 +48,22 @@ $ddl = 'CREATE TABLE IF NOT EXISTS site_entity (
 $pdo->exec($ddl);
 echo "✓ site_entity table ready\n";
 
+// Add sites.mcp_project column if absent (older installs lack it)
+$cols = $db->fetchAll('PRAGMA table_info(sites)');
+$hasMcpProject = false;
+foreach ($cols as $c) {
+    if (($c['name'] ?? '') === 'mcp_project') {
+        $hasMcpProject = true;
+        break;
+    }
+}
+if (!$hasMcpProject) {
+    $pdo->exec('ALTER TABLE sites ADD COLUMN mcp_project TEXT');
+    echo "✓ sites.mcp_project column added\n";
+} else {
+    echo "✓ sites.mcp_project column already present\n";
+}
+
 // Enable TechSEOMonitor if present and still disabled
 $job = $db->fetchOne("SELECT id, enabled FROM jobs WHERE name = 'TechSEOMonitor'");
 if ($job && (int) $job['enabled'] === 0) {

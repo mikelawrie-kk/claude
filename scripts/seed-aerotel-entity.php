@@ -24,6 +24,11 @@ if (!$site) {
     exit(3);
 }
 
+// Set the MCP project key for Aerotel's bridge. The Aerotel bridge's cpanel_read_file / cpanel_write_file
+// require 'project' (= which project to read/write in). For aerotel.co.za the project key is 'root'
+// (= /home/aerotelco/public_html).
+$db->execute("UPDATE sites SET mcp_project = ? WHERE id = ?", ['root', $site['id']]);
+
 // Make sure a site_entity row exists; the installer seeds one, but migration doesn't guarantee it.
 $existing = $db->fetchOne("SELECT id FROM site_entity WHERE site_id = ?", [$site['id']]);
 if (!$existing) {

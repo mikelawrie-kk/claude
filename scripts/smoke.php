@@ -3,10 +3,11 @@
  * File: scripts/smoke.php
  * Description: Local smoke test for Week-1 spine. Creates fresh DB, runs Orchestrator::tick() in normal/kill/cost-exceeded/dry-run modes, exercises MCPClient against a stub. Not deployed to cPanel.
  * Project: Pulse v1
- * Version: 1.1.0
+ * Version: 1.2.0
  * Created: 2026-05-14 10:55 SAST
- * Modified: 2026-11-03 10:10 SAST
+ * Modified: 2026-11-03 14:45 SAST
  * Changes:
+ *   1.2.0 (2026-11-03 14:45) — added Week 3 assertions: FixerBase, all 7 fixers load and declare correct handles(), SchemaFixer merges site_entity into a valid JSON-LD block, FixGenerator coalesces schema findings into one payload
  *   1.1.0 (2026-11-03 10:10) — added Week 2 assertions: site_entity table, Scorer, CheckBase upsert dedup, TechSEOMonitor Job loads all 7 checks, SchemaCheck surfaces missing @id/sameAs
  *   1.0.0 (2026-05-14 10:55) — initial creation
  */
@@ -55,7 +56,7 @@ echo "=== Pulse Week-1 spine smoke test ===\n";
 $db = DB::getInstance();
 foreach ([
     'CREATE TABLE jobs (id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL, module TEXT NOT NULL, cron_schedule TEXT, enabled INTEGER DEFAULT 1, config_json TEXT, last_run_at TEXT, next_run_at TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)',
-    'CREATE TABLE sites (id INTEGER PRIMARY KEY, domain TEXT UNIQUE NOT NULL, gsc_property TEXT, sheet_id TEXT, notify_email TEXT, mcp_bridge_url TEXT, mcp_bridge_key TEXT, enabled INTEGER DEFAULT 1, auto_apply_threshold TEXT DEFAULT \'manual\', created_at TEXT DEFAULT CURRENT_TIMESTAMP)',
+    'CREATE TABLE sites (id INTEGER PRIMARY KEY, domain TEXT UNIQUE NOT NULL, gsc_property TEXT, sheet_id TEXT, notify_email TEXT, mcp_bridge_url TEXT, mcp_bridge_key TEXT, mcp_project TEXT, enabled INTEGER DEFAULT 1, auto_apply_threshold TEXT DEFAULT \'manual\', created_at TEXT DEFAULT CURRENT_TIMESTAMP)',
     'CREATE TABLE runs (id INTEGER PRIMARY KEY, job_id INTEGER, site_id INTEGER, started_at TEXT DEFAULT CURRENT_TIMESTAMP, ended_at TEXT, status TEXT, rows_processed INTEGER DEFAULT 0, rows_failed INTEGER DEFAULT 0, cost_usd REAL DEFAULT 0, report_path TEXT, error_message TEXT)',
     'CREATE TABLE tasks (id INTEGER PRIMARY KEY, run_id INTEGER, task_type TEXT, payload_json TEXT, status TEXT, result_json TEXT, cost_usd REAL DEFAULT 0, duration_ms INTEGER, attempt INTEGER DEFAULT 1, created_at TEXT DEFAULT CURRENT_TIMESTAMP)',
     'CREATE TABLE guardrails (id INTEGER PRIMARY KEY, date TEXT UNIQUE, cost_ceiling_usd REAL DEFAULT 5.00, cost_used_usd REAL DEFAULT 0, kill_switch INTEGER DEFAULT 0, dry_run INTEGER DEFAULT 0)',
@@ -263,6 +264,150 @@ $html = '<html><head><script type="application/ld+json">{"@context":"https://sch
 $probe = new _SchemaCheckProbe((int) $runRow['id'], (int) $siteRow['id'], $siteRow, null, []);
 $probe->probe($html);
 check('SchemaCheck extracts JSON-LD blocks from HTML', $probe->getBlocksCount() === 1);
+
+// ============================================================
+// Week 3 — Fixer layer
+// ============================================================
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/fixers/FixerBase.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/fixers/HTTPStatusFixer.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/fixers/RobotsFixer.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/fixers/RedirectFixer.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/fixers/BrokenLinkFixer.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/fixers/IndexingFixer.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/fixers/CWVFixer.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/fixers/SchemaFixer.php';
+require_once PULSE_ROOT . '/app/jobs/TechSEOMonitor/FixGenerator.php';
+
+foreach ([
+    'HTTPStatus' => 'HTTPStatusFixer',
+    'Robots' => 'RobotsFixer',
+    'Redirect' => 'RedirectFixer',
+    'BrokenLink' => 'BrokenLinkFixer',
+    'Indexing' => 'IndexingFixer',
+    'CWV' => 'CWVFixer',
+    'Schema' => 'SchemaFixer',
+] as $checkType => $class) {
+    check("$class exists and extends FixerBase", class_exists($class) && is_subclass_of($class, 'FixerBase'));
+    $instance = new $class(['id' => 1, 'domain' => 'smoke.test'], null, []);
+    check($class . ' handles() returns ' . $checkType, $instance->handles() === $checkType);
+}
+
+// Diagnostic-only fixers return null
+$diag = new BrokenLinkFixer(['id' => 1, 'domain' => 'smoke.test'], null, []);
+check('BrokenLinkFixer is diagnostic (returns null)', $diag->generate(['issue' => 'anything', 'id' => 1]) === null);
+$diag = new HTTPStatusFixer(['id' => 1, 'domain' => 'smoke.test'], null, []);
+check('HTTPStatusFixer is diagnostic (returns null)', $diag->generate(['issue' => 'anything', 'id' => 1]) === null);
+$diag = new CWVFixer(['id' => 1, 'domain' => 'smoke.test'], null, []);
+check('CWVFixer is diagnostic (returns null)', $diag->generate(['issue' => 'anything', 'id' => 1]) === null);
+
+// RedirectFixer http→https payload shape
+class _RedirectFixerProbe extends RedirectFixer
+{
+    public function stubHtaccess(string $contents): void
+    {
+        $ref = new ReflectionClass('FixerBase');
+        $cacheProp = $ref->getProperty('cache');
+        $cacheProp->setAccessible(true);
+        $cache = $cacheProp->getValue();
+        $cache[$this->site['id'] . '|.htaccess'] = $contents;
+        $cacheProp->setValue(null, $cache);
+    }
+}
+$rf = new _RedirectFixerProbe(['id' => 99, 'domain' => 'smoke.test', 'mcp_bridge_url' => 'https://smoke.test/mcp/', 'mcp_bridge_key' => 'k'], null, []);
+$rf->stubHtaccess("Options -Indexes\n");
+$payload = $rf->generate(['issue' => 'HTTP does not redirect to HTTPS', 'id' => 1]);
+check('RedirectFixer produces write payload with mcp_tool=cpanel_write_file', is_array($payload) && ($payload['mcp_tool'] ?? '') === 'cpanel_write_file');
+check('RedirectFixer payload targets .htaccess', isset($payload['mcp_arguments']['path']) && $payload['mcp_arguments']['path'] === '.htaccess');
+check('RedirectFixer payload contains RewriteCond !=on', str_contains((string) $payload['mcp_arguments']['content'], 'RewriteCond %{HTTPS} !=on'));
+check('RedirectFixer payload marks Pulse-managed block', str_contains((string) $payload['mcp_arguments']['content'], '# BEGIN Pulse-Redirects'));
+
+// RobotsFixer missing-robots payload
+class _RobotsFixerProbe extends RobotsFixer {
+    public function stubAbsent(): void {
+        $ref = new ReflectionClass('FixerBase');
+        $cacheProp = $ref->getProperty('cache');
+        $cacheProp->setAccessible(true);
+        $cache = $cacheProp->getValue();
+        $cache[$this->site['id'] . '|robots.txt'] = null;
+        $cacheProp->setValue(null, $cache);
+    }
+}
+$rfx = new _RobotsFixerProbe(['id' => 101, 'domain' => 'smoke.test', 'mcp_bridge_url' => 'https://smoke.test/mcp/', 'mcp_bridge_key' => 'k'], null, []);
+$rfx->stubAbsent();
+$payload = $rfx->generate(['issue' => 'robots.txt missing', 'id' => 2]);
+check('RobotsFixer missing-file payload emits default robots.txt', is_array($payload) && str_contains((string) $payload['mcp_arguments']['content'], 'User-agent: *') && str_contains((string) $payload['mcp_arguments']['content'], 'Sitemap:'));
+
+// SchemaFixer + FixGenerator end-to-end: stub homepage, run FixGenerator, inspect the primary payload.
+$db->execute('INSERT INTO sites (domain, enabled) VALUES (?, 1)', ['schemafixer.test']);
+$siteId = $db->lastInsertId();
+$db->execute(
+    "INSERT INTO site_entity (site_id, entity_type, legal_name, founding_date, slogan, ota_urls_json, founder_json, operator_json, area_served_json, llm_txt_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+        $siteId, 'BoutiqueHotel',
+        'Smoke Hotel (Pty) Ltd', '2020', 'The smokiest hotel',
+        json_encode(['https://booking.com/smoke', 'https://tripadvisor.com/smoke']),
+        json_encode(['@type' => 'Person', 'name' => 'Smoke Founder']),
+        json_encode(['@type' => 'Organization', 'name' => 'Smoke Operator']),
+        json_encode(['@type' => 'Place', 'name' => 'Smokeland']),
+        'https://schemafixer.test/llm.txt',
+    ]
+);
+$siteRow = $db->fetchOne('SELECT * FROM sites WHERE id = ?', [$siteId]);
+$entityRow = $db->fetchOne('SELECT * FROM site_entity WHERE site_id = ?', [$siteId]);
+
+// Three open schema findings + one Robots finding
+foreach (['critical', 'high', 'medium'] as $i => $sev) {
+    $db->execute(
+        "INSERT INTO findings (site_id, run_id, check_type, url, severity, issue, recommendation, status) VALUES (?, NULL, 'Schema', 'https://schemafixer.test/', ?, ?, 'Rec', 'open')",
+        [$siteId, $sev, "Smoke issue #$i"]
+    );
+}
+$db->execute(
+    "INSERT INTO findings (site_id, run_id, check_type, url, severity, issue, recommendation, status) VALUES (?, NULL, 'Robots', 'https://schemafixer.test/robots.txt', 'high', 'robots.txt missing', 'Rec', 'open')",
+    [$siteId]
+);
+
+// Stub readSiteFile() by seeding FixerBase::$cache for this site.
+$cacheProp = (new ReflectionClass('FixerBase'))->getProperty('cache');
+$cacheProp->setAccessible(true);
+$cache = $cacheProp->getValue();
+$cache[$siteId . '|index.html'] = '<html><head><title>Smoke</title></head><body></body></html>';
+$cache[$siteId . '|index.htm'] = null;
+$cache[$siteId . '|index.php'] = null;
+$cache[$siteId . '|robots.txt'] = null;
+$cacheProp->setValue(null, $cache);
+
+$stats = FixGenerator::generate($siteRow, $entityRow, []);
+$payloads = $db->fetchAll('SELECT id, check_type, fix_payload_json FROM findings WHERE site_id = ?', [$siteId]);
+$schemaPayloads = array_filter($payloads, static fn ($r) => $r['check_type'] === 'Schema' && !empty($r['fix_payload_json']));
+check('FixGenerator attaches a payload to every schema finding', count($schemaPayloads) === 3);
+$primaryPayload = null;
+$primaryCount = 0;
+$bundledCount = 0;
+foreach ($schemaPayloads as $r) {
+    $decoded = json_decode($r['fix_payload_json'], true);
+    if (isset($decoded['bundled_with'])) {
+        $bundledCount++;
+    } else {
+        $primaryCount++;
+        $primaryPayload = $decoded;
+    }
+}
+check('FixGenerator coalesces: 1 primary + 2 bundled schema payloads', $primaryCount === 1 && $bundledCount === 2);
+check('SchemaFixer primary payload uses cpanel_write_file', ($primaryPayload['mcp_tool'] ?? '') === 'cpanel_write_file');
+$content = (string) ($primaryPayload['mcp_arguments']['content'] ?? '');
+check('SchemaFixer injects <script type="application/ld+json">', str_contains($content, 'application/ld+json'));
+check('SchemaFixer block carries @id anchor', str_contains($content, '"@id"'));
+check('SchemaFixer block uses BoutiqueHotel @type', str_contains($content, '"BoutiqueHotel"'));
+check('SchemaFixer block includes legalName from entity', str_contains($content, 'Smoke Hotel (Pty) Ltd'));
+check('SchemaFixer block includes sameAs with OTA URLs', str_contains($content, 'booking.com/smoke') && str_contains($content, 'tripadvisor.com/smoke'));
+check('SchemaFixer block includes founder from entity', str_contains($content, 'Smoke Founder'));
+check('SchemaFixer block includes parentOrganization from operator', str_contains($content, 'Smoke Operator'));
+check('SchemaFixer block includes areaServed Smokeland', str_contains($content, 'Smokeland'));
+check('SchemaFixer declares llm.txt via additionalProperty', str_contains($content, 'llmInfo') && str_contains($content, 'llm.txt'));
+
+$robotsRow = $db->fetchOne("SELECT fix_payload_json FROM findings WHERE site_id = ? AND check_type = 'Robots'", [$siteId]);
+check('FixGenerator attaches a payload to the Robots finding', !empty($robotsRow['fix_payload_json']));
 
 echo "\n=== $pass passed, $fail failed ===\n";
 @unlink($smokeDb);
